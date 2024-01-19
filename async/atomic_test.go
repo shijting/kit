@@ -1,10 +1,10 @@
-package atomic
+package async
 
 import (
 	"testing"
 )
 
-func TestValue(t *testing.T) {
+func TestAtomic(t *testing.T) {
 	originalValue := 42
 	atomicValue := NewAtomic(originalValue)
 
