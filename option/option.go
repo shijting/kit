@@ -9,3 +9,16 @@ func (opts Options[T]) Apply(t *T) {
 		opt(t)
 	}
 }
+
+type OptionErr[T any] func(t *T) error
+
+type OptionsErr[T any] []OptionErr[T]
+
+func (opts OptionsErr[T]) Apply(t *T) error {
+	for _, opt := range opts {
+		if err := opt(t); err != nil {
+			return err
+		}
+	}
+	return nil
+}
