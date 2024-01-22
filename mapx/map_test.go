@@ -74,3 +74,50 @@ func TestSlicesToMap(t *testing.T) {
 		})
 	}
 }
+
+func TestMapToSliceWithOrderFunc(t *testing.T) {
+	// 辅助函数用于比较两个切片是否相等
+	equals := func(t *testing.T, expected, actual interface{}) {
+		t.Helper()
+		if !reflect.DeepEqual(expected, actual) {
+			t.Errorf("Expected %v, but got %v", expected, actual)
+		}
+	}
+
+	// 编写测试用例
+	t.Run("Ordered by Key", func(t *testing.T) {
+		m := map[int]string{
+			3: "three",
+			1: "one",
+			2: "two",
+		}
+
+		keys, values := MapToSliceWithOrderFunc(m, func(k int, v string) bool {
+			return k < 3
+		})
+
+		expectedKeys := []int{1, 2}
+		expectedValues := []string{"one", "two"}
+
+		equals(t, expectedKeys, keys)
+		equals(t, expectedValues, values)
+	})
+
+	t.Run("Ordered by Value Length", func(t *testing.T) {
+		m := map[int]string{
+			1: "one",
+			2: "three",
+			3: "four",
+		}
+
+		keys, values := MapToSliceWithOrderFunc(m, func(k int, v string) bool {
+			return len(v) > 3
+		})
+
+		expectedKeys := []int{2, 3}
+		expectedValues := []string{"three", "four"}
+
+		equals(t, expectedKeys, keys)
+		equals(t, expectedValues, values)
+	})
+}

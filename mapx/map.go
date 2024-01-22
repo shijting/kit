@@ -35,3 +35,46 @@ func SlicesToMap[K comparable, V any](keys []K, values []V) map[K]V {
 
 	return result
 }
+
+// MapToSlice 将map转换为键值切片
+func MapToSlice[K comparable, V any](m map[K]V) ([]K, []V) {
+	keys := make([]K, 0, len(m))
+	values := make([]V, 0, len(m))
+
+	for k, v := range m {
+		keys = append(keys, k)
+		values = append(values, v)
+	}
+
+	return keys, values
+}
+
+// MapToSliceWithOrder 将map转换为键值切片，并按照指定的顺序返回
+func MapToSliceWithOrder[K comparable, V any](m map[K]V, order []K) ([]K, []V) {
+	keys := make([]K, 0, len(m))
+	values := make([]V, 0, len(m))
+
+	for _, k := range order {
+		if v, ok := m[k]; ok {
+			keys = append(keys, k)
+			values = append(values, v)
+		}
+	}
+
+	return keys, values
+}
+
+// MapToSliceWithOrderFunc 将map转换为键值切片，并按照指定的顺序返回
+func MapToSliceWithOrderFunc[K comparable, V any](m map[K]V, order func(k K, v V) bool) ([]K, []V) {
+	keys := make([]K, 0, len(m))
+	values := make([]V, 0, len(m))
+
+	for k, v := range m {
+		if order(k, v) {
+			keys = append(keys, k)
+			values = append(values, v)
+		}
+	}
+
+	return keys, values
+}
