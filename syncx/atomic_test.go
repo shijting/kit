@@ -1,4 +1,4 @@
-package async
+package syncx
 
 import (
 	"testing"
