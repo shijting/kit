@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gitlab.flytiger.net/09076712/es/util"
 )
 
 func TestGenerateToken(t *testing.T) {
@@ -25,14 +24,14 @@ func TestGenerateToken(t *testing.T) {
 		{
 			name:          "ok",
 			userID:        6,
-			username:      util.RandString(5),
+			username:      "Alice",
 			duration:      time.Second * 10,
 			wantExpiredAt: time.Now().Add(time.Second * 10),
 		},
 		{
 			name:          "expired token",
 			userID:        6,
-			username:      util.RandString(5),
+			username:      "Alice",
 			duration:      -time.Second * 10,
 			wantExpiredAt: time.Now().Add(-time.Second * 10),
 			wantCheckErr:  ErrExpiredToken,
@@ -40,9 +39,9 @@ func TestGenerateToken(t *testing.T) {
 		{
 			name:          "invalid token",
 			userID:        6,
-			username:      util.RandString(5),
+			username:      "Alice",
 			duration:      time.Second * 10,
-			inputToken:    util.RandString(10),
+			inputToken:    "123456",
 			wantExpiredAt: time.Now().Add(time.Second * 10),
 			wantCheckErr:  ErrInvalidToken,
 		},
@@ -51,7 +50,7 @@ func TestGenerateToken(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			secretKey := "123456"
-			jwt := NewJWTGenerator(WithSecretKey(secretKey), WithUserID(testCase.userID), WithExpired(testCase.duration), WithUsername(testCase.username))
+			jwt := NewJWTGenerator(WithJWTSecretKey(secretKey), WithJWTUserID(testCase.userID), WithJWTExpired(testCase.duration), WithJWTUsername(testCase.username))
 			token, payload, err := jwt.CreateToken()
 
 			assert.Equal(t, testCase.wantGenErr, err)

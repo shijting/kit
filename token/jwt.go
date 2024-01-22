@@ -25,25 +25,25 @@ func NewJWTGenerator(opts ...option.Option[JwtGenerator]) Maker {
 	return obj
 }
 
-func WithUserID(userID int64) option.Option[JwtGenerator] {
+func WithJWTUserID(userID int64) option.Option[JwtGenerator] {
 	return func(t *JwtGenerator) {
 		t.userID = userID
 	}
 }
 
-func WithExpired(d time.Duration) option.Option[JwtGenerator] {
+func WithJWTExpired(d time.Duration) option.Option[JwtGenerator] {
 	return func(t *JwtGenerator) {
 		t.expiredAt = time.Now().Add(d)
 	}
 }
 
-func WithUsername(username string) option.Option[JwtGenerator] {
+func WithJWTUsername(username string) option.Option[JwtGenerator] {
 	return func(t *JwtGenerator) {
 		t.username = username
 	}
 }
 
-func WithSecretKey(secretKey string) option.Option[JwtGenerator] {
+func WithJWTSecretKey(secretKey string) option.Option[JwtGenerator] {
 	return func(t *JwtGenerator) {
 		t.secretKey = []byte(secretKey)
 	}
