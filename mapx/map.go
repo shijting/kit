@@ -51,7 +51,7 @@ func MapToSlice[K comparable, V any](m map[K]V) ([]K, []V) {
 
 // Filter 过滤map中指定的key和value，返回新的map
 func Filter[K comparable, V any](m map[K]V, filter func(key K, value V) bool) map[K]V {
-	result := make(map[K]V)
+	result := make(map[K]V, len(m))
 
 	for k, v := range m {
 		if filter(k, v) {
