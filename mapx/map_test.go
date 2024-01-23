@@ -75,8 +75,7 @@ func TestSlicesToMap(t *testing.T) {
 	}
 }
 
-func TestMapToSliceWithOrderFunc(t *testing.T) {
-	// 辅助函数用于比较两个切片是否相等
+func TestFilter(t *testing.T) {
 	equals := func(t *testing.T, expected, actual interface{}) {
 		t.Helper()
 		if !reflect.DeepEqual(expected, actual) {
@@ -84,40 +83,40 @@ func TestMapToSliceWithOrderFunc(t *testing.T) {
 		}
 	}
 
-	// 编写测试用例
-	t.Run("Ordered by Key", func(t *testing.T) {
-		m := map[int]string{
-			3: "three",
+	t.Run("Filter by Key", func(t *testing.T) {
+		input := map[int]string{
 			1: "one",
 			2: "two",
+			3: "three",
 		}
 
-		keys, values := MapToSliceWithOrderFunc(m, func(k int, v string) bool {
-			return k < 3
+		filtered := Filter(input, func(key int, value string) bool {
+			return key > 1
 		})
 
-		expectedKeys := []int{1, 2}
-		expectedValues := []string{"one", "two"}
+		expected := map[int]string{
+			2: "two",
+			3: "three",
+		}
 
-		equals(t, expectedKeys, keys)
-		equals(t, expectedValues, values)
+		equals(t, expected, filtered)
 	})
 
-	t.Run("Ordered by Value Length", func(t *testing.T) {
-		m := map[int]string{
-			1: "one",
-			2: "three",
-			3: "four",
+	t.Run("Filter by Value Length", func(t *testing.T) {
+		input := map[int]string{
+			1: "short",
+			2: "medium",
+			3: "long",
 		}
 
-		keys, values := MapToSliceWithOrderFunc(m, func(k int, v string) bool {
-			return len(v) > 3
+		filtered := Filter(input, func(key int, value string) bool {
+			return len(value) < 5
 		})
 
-		expectedKeys := []int{2, 3}
-		expectedValues := []string{"three", "four"}
+		expected := map[int]string{
+			3: "long",
+		}
 
-		equals(t, expectedKeys, keys)
-		equals(t, expectedValues, values)
+		equals(t, expected, filtered)
 	})
 }
