@@ -16,18 +16,18 @@ type FixIntervalRetry struct {
 	// 重试间隔
 	Interval time.Duration
 	// 最大次数
-	Max int
+	MaxAttempts int
 	// 当前次数
-	cnt int
+	CurrentAttempt int
 }
 
-func NewFixIntervalRetry(interval time.Duration, max int, cnt int) *FixIntervalRetry {
-	return &FixIntervalRetry{Interval: interval, Max: max, cnt: cnt}
+func NewFixIntervalRetry(interval time.Duration, max int) *FixIntervalRetry {
+	return &FixIntervalRetry{Interval: interval, MaxAttempts: max, CurrentAttempt: 0}
 }
 
 func (f FixIntervalRetry) Next() (time.Duration, bool) {
-	f.cnt++
-	return f.Interval, f.cnt <= f.Max
+	f.CurrentAttempt++
+	return f.Interval, f.CurrentAttempt <= f.MaxAttempts
 }
 
 // ExponentialBackoffRetry 指数退避重试
