@@ -1,4 +1,4 @@
-package rlock
+package lockx
 
 import "time"
 
