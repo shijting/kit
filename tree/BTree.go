@@ -5,7 +5,9 @@ import (
 	"math"
 )
 
+// BTree 二叉树
 type BTree struct {
+	// TODO 支持泛型
 	Value int
 	Left  *BTree
 	Right *BTree
@@ -13,11 +15,11 @@ type BTree struct {
 
 func (t *BTree) String() {
 	fmt.Printf("二叉树:值是%d\n", t.Value)
-	var leftValue interface{}
+	var leftValue any
 	if t.Left != nil {
 		leftValue = t.Left.Value
 	}
-	var rightValue interface{}
+	var rightValue any
 	if t.Right != nil {
 		rightValue = t.Right.Value
 	}
@@ -109,9 +111,12 @@ func (t *BTree) Preorder() {
 	if t == nil {
 		return
 	}
-	fmt.Printf("%d->", t.Value) //先打印出值
-	t.Left.Preorder()           //递归
-	t.Right.Preorder()          //递归
+	// 先打印出值
+	fmt.Printf("%d->", t.Value)
+	// 递归
+	t.Left.Preorder()
+	// 递归
+	t.Right.Preorder()
 }
 
 // Inorder 中序遍历
@@ -140,7 +145,8 @@ func (t *BTree) Postorder() {
 	fmt.Printf("%d->", t.Value)
 }
 
-func (t *BTree) ConnectLeft(treeOrValue interface{}) *BTree {
+// ConnectLeft 连接左节点
+func (t *BTree) ConnectLeft(treeOrValue any) *BTree {
 	if bt, ok := treeOrValue.(*BTree); ok {
 		t.Left = bt
 	} else if v, ok := treeOrValue.(int); ok {
@@ -148,7 +154,9 @@ func (t *BTree) ConnectLeft(treeOrValue interface{}) *BTree {
 	}
 	return t
 }
-func (t *BTree) ConnectRight(treeOrValue interface{}) *BTree {
+
+// ConnectRight 连接右节点
+func (t *BTree) ConnectRight(treeOrValue any) *BTree {
 	if bt, ok := treeOrValue.(*BTree); ok {
 		t.Right = bt
 	} else if v, ok := treeOrValue.(int); ok {
@@ -158,6 +166,7 @@ func (t *BTree) ConnectRight(treeOrValue interface{}) *BTree {
 
 }
 
+// NewBTree 创建一个二叉树
 func NewBTree(value int) *BTree {
 	return &BTree{Value: value}
 }
@@ -165,6 +174,7 @@ func NewBTree(value int) *BTree {
 // BTrees 二叉树集合类型
 type BTrees []*BTree
 
+// String 打印
 func (b BTrees) String() {
 	for _, bt := range b {
 		bt.String()
@@ -182,6 +192,7 @@ func (b BTrees) IsAllNil() bool {
 	return true
 }
 
+// NewBTrees 创建多个二叉树
 func NewBTrees(values ...int) BTrees {
 	btrees := make(BTrees, len(values))
 	for index, v := range values {

@@ -5,7 +5,9 @@ import (
 	"math"
 )
 
+// BSTree 二叉搜索树
 type BSTree struct {
+	// TODO 支持泛型
 	Value int
 	Left  *BSTree
 	Right *BSTree
@@ -116,7 +118,8 @@ func AddBSTree(bst *BSTree, node *BSTree) *BSTree {
 	return node
 }
 
-func SearchNodeWithParent(value int, node *BSTree, parent ...interface{}) (*BSTree, *BSTree, string) {
+// SearchNodeWithParent 搜索节点
+func SearchNodeWithParent(value int, node *BSTree, parent ...any) (*BSTree, *BSTree, string) {
 	if node == nil {
 		return nil, nil, ""
 	}
@@ -185,6 +188,7 @@ func (t *BSTree) getSingleChild() *BSTree {
 	return nil
 }
 
+// DeleteNode 删除节点
 func DeleteNode(value int, treeRoot *BSTree) {
 	node, parent, pos := SearchNodeWithParent(value, treeRoot)
 	if node == nil { //没有节点
@@ -221,7 +225,6 @@ func DeleteNode(value int, treeRoot *BSTree) {
 		DeleteNode(successor.Value, treeRoot)
 		node.Value = successor.Value
 	}
-
 }
 
 // Preorder 前序
@@ -256,6 +259,7 @@ func (t *BSTree) Postorder(result *[]int) {
 	}
 	t.Left.Postorder(result)
 	t.Right.Postorder(result)
+
 	*result = append(*result, t.Value)
 }
 
@@ -263,16 +267,14 @@ func (t *BSTree) Postorder(result *[]int) {
 func MaxNode(node *BSTree) *BSTree {
 	if node.Right != nil {
 		return MaxNode(node.Right)
-	} else {
-		return node
 	}
+	return node
 }
 
 // MinNode 最小节点
 func MinNode(node *BSTree) *BSTree {
 	if node.Left != nil {
 		return MinNode(node.Left)
-	} else {
-		return node
 	}
+	return node
 }
