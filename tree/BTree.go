@@ -6,14 +6,14 @@ import (
 )
 
 // BTree 二叉树
-type BTree struct {
+type BTree[T any] struct {
 	// TODO 支持泛型
-	Value int
-	Left  *BTree
-	Right *BTree
+	Value T
+	Left  *BTree[T]
+	Right *BTree[T]
 }
 
-func (t *BTree) String() {
+func (t *BTree[T]) String() {
 	fmt.Printf("二叉树:值是%d\n", t.Value)
 	var leftValue any
 	if t.Left != nil {
@@ -35,7 +35,7 @@ func max(a int, b int) int {
 }
 
 // Level 获取层高
-func (t *BTree) Level() int {
+func (t *BTree[T]) Level() int {
 	if t == nil {
 		return 0
 	}
@@ -49,7 +49,7 @@ func printBlanks(count float64) {
 }
 
 // PrintBTree 打印树
-func PrintBTree(nodes BTrees, maxlevel int, currlevel int) {
+func PrintBTree[T any](nodes BTrees[T], maxlevel int, currlevel int) {
 	if len(nodes) == 0 || nodes.IsAllNil() {
 		return
 	}
@@ -61,7 +61,7 @@ func PrintBTree(nodes BTrees, maxlevel int, currlevel int) {
 	// 先打左边空格
 	printBlanks(leftBlanks)
 
-	newNodes := make(BTrees, 0)
+	newNodes := make(BTrees[T], 0)
 	for _, node := range nodes {
 		if node != nil {
 			fmt.Print(node.Value)
@@ -107,7 +107,7 @@ func PrintBTree(nodes BTrees, maxlevel int, currlevel int) {
 }
 
 // Preorder 先序遍历
-func (t *BTree) Preorder() {
+func (t *BTree[T]) Preorder() {
 	if t == nil {
 		return
 	}
@@ -120,7 +120,7 @@ func (t *BTree) Preorder() {
 }
 
 // Inorder 中序遍历
-func (t *BTree) Inorder() {
+func (t *BTree[T]) Inorder() {
 	if t == nil {
 		return
 	}
@@ -133,7 +133,7 @@ func (t *BTree) Inorder() {
 }
 
 // Postorder 后序遍历
-func (t *BTree) Postorder() {
+func (t *BTree[T]) Postorder() {
 	if t == nil {
 		return
 	}
@@ -146,20 +146,20 @@ func (t *BTree) Postorder() {
 }
 
 // ConnectLeft 连接左节点
-func (t *BTree) ConnectLeft(treeOrValue any) *BTree {
-	if bt, ok := treeOrValue.(*BTree); ok {
+func (t *BTree[T]) ConnectLeft(treeOrValue any) *BTree[T] {
+	if bt, ok := treeOrValue.(*BTree[T]); ok {
 		t.Left = bt
-	} else if v, ok := treeOrValue.(int); ok {
+	} else if v, ok := treeOrValue.(T); ok {
 		t.Left = NewBTree(v)
 	}
 	return t
 }
 
 // ConnectRight 连接右节点
-func (t *BTree) ConnectRight(treeOrValue any) *BTree {
-	if bt, ok := treeOrValue.(*BTree); ok {
+func (t *BTree[T]) ConnectRight(treeOrValue any) *BTree[T] {
+	if bt, ok := treeOrValue.(*BTree[T]); ok {
 		t.Right = bt
-	} else if v, ok := treeOrValue.(int); ok {
+	} else if v, ok := treeOrValue.(T); ok {
 		t.Right = NewBTree(v)
 	}
 	return t
@@ -167,15 +167,15 @@ func (t *BTree) ConnectRight(treeOrValue any) *BTree {
 }
 
 // NewBTree 创建一个二叉树
-func NewBTree(value int) *BTree {
-	return &BTree{Value: value}
+func NewBTree[T any](value T) *BTree[T] {
+	return &BTree[T]{Value: value}
 }
 
 // BTrees 二叉树集合类型
-type BTrees []*BTree
+type BTrees[T any] []*BTree[T]
 
 // String 打印
-func (b BTrees) String() {
+func (b BTrees[T]) String() {
 	for _, bt := range b {
 		bt.String()
 	}
@@ -183,7 +183,7 @@ func (b BTrees) String() {
 }
 
 // IsAllNil 判断子元素是否都为nil
-func (b BTrees) IsAllNil() bool {
+func (b BTrees[T]) IsAllNil() bool {
 	for _, bt := range b {
 		if bt != nil {
 			return false
@@ -193,8 +193,8 @@ func (b BTrees) IsAllNil() bool {
 }
 
 // NewBTrees 创建多个二叉树
-func NewBTrees(values ...int) BTrees {
-	btrees := make(BTrees, len(values))
+func NewBTrees[T any](values ...T) BTrees[T] {
+	btrees := make(BTrees[T], len(values))
 	for index, v := range values {
 		btrees[index] = NewBTree(v)
 	}
