@@ -114,7 +114,7 @@ func (t *BTree[T]) Preorder() {
 		return
 	}
 	// 先打印出值
-	fmt.Printf("%d->", t.Value)
+	fmt.Printf("%v->", t.Value)
 	// 递归
 	t.Left.Preorder()
 	// 递归
@@ -129,7 +129,7 @@ func (t *BTree[T]) Inorder() {
 	// 递归
 	t.Left.Inorder()
 	// 先打印出值
-	fmt.Printf("%d->", t.Value)
+	fmt.Printf("%v->", t.Value)
 	// 递归
 	t.Right.Inorder() //递归
 }
@@ -144,7 +144,7 @@ func (t *BTree[T]) Postorder() {
 	// 递归
 	t.Right.Postorder()
 	// 先打印出值
-	fmt.Printf("%d->", t.Value)
+	fmt.Printf("%v->", t.Value)
 }
 
 // ConnectLeft 连接左节点
