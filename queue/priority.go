@@ -57,6 +57,9 @@ func NewFixedSizeHeap[T any](maxSize int) *FixedSizeHeap[T] {
 
 // Push adds an item with priority to the heap.
 func (h *FixedSizeHeap[T]) Push(item *Item[T]) {
+	if item == nil {
+		return
+	}
 	if len(h.heap) < h.maxSize {
 		heap.Push(&h.heap, item)
 	} else {

@@ -44,6 +44,11 @@ import (
 
 func TestFixedSizeHeap(t *testing.T) {
 	fixedSizeHeap := NewFixedSizeHeap[int](3)
+	fixedSizeHeap.Push(nil)
+
+	if fixedSizeHeap.Len() != 0 {
+		t.Errorf("Expected length 0, got %d", fixedSizeHeap.Len())
+	}
 
 	poppedItem := fixedSizeHeap.Pop()
 
