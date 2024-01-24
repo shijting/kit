@@ -14,8 +14,10 @@ type BTree[T any] struct {
 }
 
 func (t *BTree[T]) String() {
-	fmt.Printf("二叉树:值是%d\n", t.Value)
+	fmt.Printf("二叉树:值是%v\n", t.Value)
+
 	var leftValue any
+
 	if t.Left != nil {
 		leftValue = t.Left.Value
 	}
