@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
+	"github.com/shijting/kit"
 	"github.com/shijting/kit/option"
 	"time"
 )
@@ -36,7 +37,7 @@ type Client struct {
 	expiration time.Duration
 	// timeout 调用redis的超时时间
 	timeout time.Duration
-	retry   RetryStrategy
+	retry   kit.RetryStrategy
 }
 
 func NewClient(client redis.Cmdable, opts ...option.Option[Client]) *Client {
@@ -72,7 +73,7 @@ func WithTimeout(timeout time.Duration) option.Option[Client] {
 }
 
 // WithRetry 设置重试策略
-func WithRetry(retry RetryStrategy) option.Option[Client] {
+func WithRetry(retry kit.RetryStrategy) option.Option[Client] {
 	return func(t *Client) {
 		t.retry = retry
 	}
