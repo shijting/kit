@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+// IpLimiter IP 限流器
 type IpLimiter struct {
 	prefix   string
 	cli      redis.Cmdable
