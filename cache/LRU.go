@@ -10,7 +10,7 @@ import (
 // LRUCache 是一个基于本地内存带有固定最大容量的最近最少使用（LRU）缓存实现。
 // 它支持键值对，其中键的类型为 K（comparable），值的类型为 any。
 type LRUCache[K comparable, V any] struct {
-	mu   sync.Mutex
+	mu   sync.RWMutex
 	list *list.List
 	data map[K]*list.Element
 	// Maximum capacity of the LRUCache
@@ -36,8 +36,8 @@ type Item[K comparable, V any] struct {
 // Get 从 LRUCache 中检索与指定键关联的值。
 // 如果找到键，则返回值和 true，否则返回零值和 false。
 func (l *LRUCache[K, V]) Get(key K) (value Item[K, V], ok bool) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 	var zeroVal Item[K, V]
 	if ele, exists := l.data[key]; exists {
 		// Lazy deletion
@@ -93,8 +93,8 @@ func (l *LRUCache[K, V]) removeElement(ele *list.Element) {
 
 // Print 打印 LRUCache 元素值，按最近访问的顺序排列。
 func (l *LRUCache[K, V]) Print() {
-	l.mu.Lock()
-	defer l.mu.Unlock()
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 
 	ele := l.list.Front()
 	for ele != nil {
