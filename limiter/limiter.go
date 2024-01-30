@@ -3,6 +3,7 @@ package limiter
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/shijting/kit/cache"
+	"net/http"
 )
 
 // GinLimiter gin 限流装饰器
@@ -11,7 +12,7 @@ func GinLimiter(cap, rate int64) func(handler gin.HandlerFunc) gin.HandlerFunc {
 	return func(handler gin.HandlerFunc) gin.HandlerFunc {
 		return func(ctx *gin.Context) {
 			if !bucket.Accept() {
-				ctx.AbortWithStatusJSON(429, gin.H{"message": "Too many requests"})
+				ctx.AbortWithStatus(http.StatusTooManyRequests)
 				return
 			}
 			handler(ctx)
@@ -28,7 +29,7 @@ func GinQueryLimiter(cap, rate int64, key string) func(handler gin.HandlerFunc) 
 		return func(ctx *gin.Context) {
 			if ctx.Query(key) != "" {
 				if !bucket.Accept() {
-					ctx.AbortWithStatusJSON(429, gin.H{"message": "Too many requests"})
+					ctx.AbortWithStatus(http.StatusTooManyRequests)
 					return
 				}
 			}
@@ -70,7 +71,7 @@ func (i *IPTokenBucketLimiter) Build(cap, rate int64) func(handler gin.HandlerFu
 			}
 
 			if !bucket.Accept() {
-				ctx.AbortWithStatusJSON(429, gin.H{"message": "Too many requests"})
+				ctx.AbortWithStatus(http.StatusTooManyRequests)
 				return
 			}
 
