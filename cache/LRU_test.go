@@ -112,9 +112,6 @@ func TestLRUCache(t *testing.T) {
 				assert.Equal(t, expectedItem.Key, data.Key)
 				assert.Equal(t, expectedItem.Value, data.Value)
 				require.WithinDuration(t, expectedItem.Expiration, data.Expiration, time.Second*4)
-				//if !itemEqual(expectedItem, ele.Value.(Item[int, string])) {
-				//	t.Errorf("Mismatch in data for key %v. Expected: %v, Got: %v", key, expectedItem, ele.Value.(Item[int, string]))
-				//}
 			}
 		})
 	}
