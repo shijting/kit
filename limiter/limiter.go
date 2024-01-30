@@ -19,7 +19,7 @@ func GinLimiter(cap, rate int64) func(handler gin.HandlerFunc) gin.HandlerFunc {
 	}
 }
 
-// GinQueryLimiter gin query 限流装饰器
+// GinQueryLimiter gin query
 // key: query key example: /api?limit=xx key: limit 有值时才限流
 func GinQueryLimiter(cap, rate int64, key string) func(handler gin.HandlerFunc) gin.HandlerFunc {
 	bucket := NewBucket(cap, rate)
@@ -40,7 +40,7 @@ func GinQueryLimiter(cap, rate int64, key string) func(handler gin.HandlerFunc) 
 // 可以使用redis实现分布式限流
 var IPBucketCache = syncx.NewMap[string, *Bucket]()
 
-// IPLimiter ip 限流装饰器
+// IPLimiter ip
 func IPLimiter(cap, rate int64) func(handler gin.HandlerFunc) gin.HandlerFunc {
 	return func(handler gin.HandlerFunc) gin.HandlerFunc {
 		return func(ctx *gin.Context) {

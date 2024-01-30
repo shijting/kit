@@ -11,8 +11,8 @@ import (
 	"time"
 )
 
-// IpLimiter IP 限流器
-type IpLimiter struct {
+// SlideWindowIPLimiter 滑动窗口IP 限流器
+type SlideWindowIPLimiter struct {
 	prefix   string
 	cli      redis.Cmdable
 	interval time.Duration
@@ -22,38 +22,38 @@ type IpLimiter struct {
 //go:embed script/slide_window.lua
 var luaScript string
 
-func NewIpLimiter(cli redis.Cmdable, opts ...option.Option[IpLimiter]) *IpLimiter {
-	limiter := &IpLimiter{
+func NewSlideWindowIPLimiter(cli redis.Cmdable, opts ...option.Option[SlideWindowIPLimiter]) *SlideWindowIPLimiter {
+	limiter := &SlideWindowIPLimiter{
 		cli:      cli,
 		prefix:   "ip-limiter",
 		interval: time.Second,
 		rate:     200,
 	}
 
-	option.Options[IpLimiter](opts).Apply(limiter)
+	option.Options[SlideWindowIPLimiter](opts).Apply(limiter)
 
 	return limiter
 }
 
-func WithInterval(interval time.Duration) option.Option[IpLimiter] {
-	return func(t *IpLimiter) {
+func WithInterval(interval time.Duration) option.Option[SlideWindowIPLimiter] {
+	return func(t *SlideWindowIPLimiter) {
 		t.interval = interval
 	}
 }
 
-func WithRate(rate int) option.Option[IpLimiter] {
-	return func(t *IpLimiter) {
+func WithRate(rate int) option.Option[SlideWindowIPLimiter] {
+	return func(t *SlideWindowIPLimiter) {
 		t.rate = rate
 	}
 }
 
-func WithPrefix(prefix string) option.Option[IpLimiter] {
-	return func(t *IpLimiter) {
+func WithPrefix(prefix string) option.Option[SlideWindowIPLimiter] {
+	return func(t *SlideWindowIPLimiter) {
 		t.prefix = prefix
 	}
 }
 
-func (b *IpLimiter) Build() gin.HandlerFunc {
+func (b *SlideWindowIPLimiter) Build() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		limited, err := b.limit(ctx)
 		if err != nil {
@@ -70,7 +70,7 @@ func (b *IpLimiter) Build() gin.HandlerFunc {
 	}
 }
 
-func (b *IpLimiter) limit(ctx *gin.Context) (bool, error) {
+func (b *SlideWindowIPLimiter) limit(ctx *gin.Context) (bool, error) {
 	key := fmt.Sprintf("%s:%s", b.prefix, ctx.ClientIP())
 	return b.cli.Eval(ctx, luaScript, []string{key},
 		b.interval.Milliseconds(), b.rate, time.Now().UnixMilli()).Bool()
