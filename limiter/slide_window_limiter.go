@@ -55,7 +55,7 @@ func WithPrefix(prefix string) option.Option[SlideWindowIPLimiter] {
 
 func (b *SlideWindowIPLimiter) Build() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		limited, err := b.limit(ctx)
+		limited, err := b.accept(ctx)
 		if err != nil {
 			log.Println(err)
 			ctx.AbortWithStatus(http.StatusInternalServerError)
@@ -70,7 +70,7 @@ func (b *SlideWindowIPLimiter) Build() gin.HandlerFunc {
 	}
 }
 
-func (b *SlideWindowIPLimiter) limit(ctx *gin.Context) (bool, error) {
+func (b *SlideWindowIPLimiter) accept(ctx *gin.Context) (bool, error) {
 	key := fmt.Sprintf("%s:%s", b.prefix, ctx.ClientIP())
 	return b.cli.Eval(ctx, luaScript, []string{key},
 		b.interval.Milliseconds(), b.rate, time.Now().UnixMilli()).Bool()

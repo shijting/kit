@@ -22,7 +22,7 @@ func GinLimiter(cap, rate int64) func(handler gin.HandlerFunc) gin.HandlerFunc {
 }
 
 // GinQueryLimiter gin query
-// key: query key example: /api?limit=xx key: limit 有值时才限流
+// key: query key example: /api?accept=xx key: accept 有值时才限流
 func GinQueryLimiter(cap, rate int64, key string) func(handler gin.HandlerFunc) gin.HandlerFunc {
 	bucket := NewBucket(cap, rate)
 	return func(handler gin.HandlerFunc) gin.HandlerFunc {
