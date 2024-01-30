@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// LRUCache 是一个带有固定最大容量的最近最少使用（LRU）缓存实现。
-// 它支持键值对，其中键的类型为 K（可比较的），值的类型为 V。
+// LRUCache 是一个基于本地内存带有固定最大容量的最近最少使用（LRU）缓存实现。
+// 它支持键值对，其中键的类型为 K（comparable），值的类型为 any。
 type LRUCache[K comparable, V any] struct {
 	mu   sync.Mutex
 	list *list.List
@@ -78,7 +78,7 @@ func (l *LRUCache[K, V]) Set(key K, value V, expiration time.Duration) {
 	}
 }
 
-// RemoveBack
+// removeOldest 移除最近最少使用的元素。
 func (l *LRUCache[K, V]) removeOldest() {
 	ele := l.list.Back()
 	if ele != nil {
