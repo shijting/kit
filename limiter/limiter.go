@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-// GinLimiter gin 限流装饰器
+// GinLimiter gin 全局流装饰器
 func GinLimiter(cap, rate int64) func(handler gin.HandlerFunc) gin.HandlerFunc {
 	bucket := NewBucket(cap, rate)
 	return func(handler gin.HandlerFunc) gin.HandlerFunc {
@@ -21,7 +21,7 @@ func GinLimiter(cap, rate int64) func(handler gin.HandlerFunc) gin.HandlerFunc {
 	}
 }
 
-// GinQueryLimiter gin query
+// GinQueryLimiter gin api query
 // key: query key example: /api?accept=xx key: accept 有值时才限流
 func GinQueryLimiter(cap, rate int64, key string) func(handler gin.HandlerFunc) gin.HandlerFunc {
 	bucket := NewBucket(cap, rate)
@@ -34,7 +34,6 @@ func GinQueryLimiter(cap, rate int64, key string) func(handler gin.HandlerFunc) 
 				}
 			}
 			handler(ctx)
-			ctx.Next()
 		}
 	}
 }
