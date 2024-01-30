@@ -3,15 +3,16 @@ package limiter
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/shijting/kit/cache"
+	"net/http"
 )
 
-// GinLimiter gin 限流装饰器
+// GinLimiter gin 全局流装饰器
 func GinLimiter(cap, rate int64) func(handler gin.HandlerFunc) gin.HandlerFunc {
 	bucket := NewBucket(cap, rate)
 	return func(handler gin.HandlerFunc) gin.HandlerFunc {
 		return func(ctx *gin.Context) {
 			if !bucket.Accept() {
-				ctx.AbortWithStatusJSON(429, gin.H{"message": "Too many requests"})
+				ctx.AbortWithStatus(http.StatusTooManyRequests)
 				return
 			}
 			handler(ctx)
@@ -20,20 +21,19 @@ func GinLimiter(cap, rate int64) func(handler gin.HandlerFunc) gin.HandlerFunc {
 	}
 }
 
-// GinQueryLimiter gin query
-// key: query key example: /api?limit=xx key: limit 有值时才限流
+// GinQueryLimiter gin api query
+// key: query key example: /api?accept=xx key: accept 有值时才限流
 func GinQueryLimiter(cap, rate int64, key string) func(handler gin.HandlerFunc) gin.HandlerFunc {
 	bucket := NewBucket(cap, rate)
 	return func(handler gin.HandlerFunc) gin.HandlerFunc {
 		return func(ctx *gin.Context) {
 			if ctx.Query(key) != "" {
 				if !bucket.Accept() {
-					ctx.AbortWithStatusJSON(429, gin.H{"message": "Too many requests"})
+					ctx.AbortWithStatus(http.StatusTooManyRequests)
 					return
 				}
 			}
 			handler(ctx)
-			ctx.Next()
 		}
 	}
 }
@@ -70,7 +70,7 @@ func (i *IPTokenBucketLimiter) Build(cap, rate int64) func(handler gin.HandlerFu
 			}
 
 			if !bucket.Accept() {
-				ctx.AbortWithStatusJSON(429, gin.H{"message": "Too many requests"})
+				ctx.AbortWithStatus(http.StatusTooManyRequests)
 				return
 			}
 
