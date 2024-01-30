@@ -227,7 +227,7 @@ func DeleteNode(value int, treeRoot *BSTree) {
 	}
 }
 
-// Preorder 前序
+// Preorder 前序遍历
 func (t *BSTree) Preorder(result *[]int) {
 	if t == nil {
 		return
@@ -239,7 +239,7 @@ func (t *BSTree) Preorder(result *[]int) {
 	t.Right.Preorder(result)
 }
 
-// Inorder 中序
+// Inorder 中序遍历
 func (t *BSTree) Inorder(result *[]int) {
 	if t == nil {
 		return
@@ -252,7 +252,7 @@ func (t *BSTree) Inorder(result *[]int) {
 	t.Right.Inorder(result)
 }
 
-// Postorder 后序
+// Postorder 后序遍历
 func (t *BSTree) Postorder(result *[]int) {
 	if t == nil {
 		return
