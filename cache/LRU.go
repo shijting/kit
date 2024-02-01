@@ -3,6 +3,7 @@ package cache
 import (
 	"container/list"
 	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 )
@@ -19,11 +20,13 @@ type LRUCache[K comparable, V any] struct {
 
 // NewLRUCache 创建一个具有指定最大容量的新 LRUCache 实例。
 func NewLRUCache[K comparable, V any](cap int) *LRUCache[K, V] {
-	return &LRUCache[K, V]{
+	cache := &LRUCache[K, V]{
 		list:        list.New(),
 		data:        make(map[K]*list.Element),
 		MaxCapacity: cap,
 	}
+	go cache.startGC()
+	return cache
 }
 
 // Item represents a key-value pair with an optional expiration time.
@@ -76,6 +79,55 @@ func (l *LRUCache[K, V]) Set(key K, value V, expiration time.Duration) {
 	if len(l.data) > l.MaxCapacity {
 		l.removeOldest()
 	}
+}
+
+func (l *LRUCache[K, V]) startGC() {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			l.mu.Lock()
+			l.gcRandom()
+			l.mu.Unlock()
+		}
+	}
+}
+
+func (l *LRUCache[K, V]) gcRandom() {
+	// 获取链表长度
+	length := l.Len()
+
+	if length == 0 {
+		return
+	}
+
+	randomIndex := rand.Intn(length)
+
+	// 遍历链表，从随机索引开始，最多遍历100个元素
+	for i := 0; i < 100 && randomIndex < length; i++ {
+		ele := l.list.Front()
+		for j := 0; j < randomIndex; j++ {
+			ele = ele.Next()
+		}
+
+		// 删除过期元素
+		if ele != nil {
+			expiration := ele.Value.(Item[K, V]).Expiration
+			if !expiration.IsZero() && time.Now().After(expiration) {
+				l.removeElement(ele)
+			}
+		}
+
+		randomIndex++
+	}
+}
+
+// Len 返回 LRUCache 中的元素个数。
+
+func (l *LRUCache[K, V]) Len() int {
+	return len(l.data)
 }
 
 // removeOldest 移除最近最少使用的元素。
