@@ -3,6 +3,7 @@ package cache
 import (
 	"container/list"
 	"fmt"
+	"github.com/shijting/kit/option"
 	"math/rand"
 	"sync"
 	"time"
@@ -15,18 +16,26 @@ type LRUCache[K comparable, V any] struct {
 	list *list.List
 	data map[K]*list.Element
 	// Maximum capacity of the LRUCache
-	MaxCapacity int
+	MaxCapacity          int
+	gcRandomDeletionStep int
 }
 
 // NewLRUCache 创建一个具有指定最大容量的新 LRUCache 实例。
-func NewLRUCache[K comparable, V any](cap int) *LRUCache[K, V] {
+func NewLRUCache[K comparable, V any](cap int, opts ...option.Option[LRUCache[K, V]]) *LRUCache[K, V] {
 	cache := &LRUCache[K, V]{
-		list:        list.New(),
-		data:        make(map[K]*list.Element),
-		MaxCapacity: cap,
+		list:                 list.New(),
+		data:                 make(map[K]*list.Element),
+		MaxCapacity:          cap,
+		gcRandomDeletionStep: 500,
 	}
 	go cache.startGC()
 	return cache
+}
+
+func WithGCRandomDeletionStep(step int) option.Option[LRUCache[string, any]] {
+	return func(t *LRUCache[string, any]) {
+		t.gcRandomDeletionStep = step
+	}
 }
 
 // Item represents a key-value pair with an optional expiration time.
@@ -105,14 +114,12 @@ func (l *LRUCache[K, V]) gcRandom() {
 
 	randomIndex := rand.Intn(length)
 
-	// 遍历链表，从随机索引开始，最多遍历100个元素
-	for i := 0; i < 100 && randomIndex < length; i++ {
+	for i := 0; i < l.gcRandomDeletionStep && randomIndex < length; i++ {
 		ele := l.list.Front()
 		for j := 0; j < randomIndex; j++ {
 			ele = ele.Next()
 		}
 
-		// 删除过期元素
 		if ele != nil {
 			expiration := ele.Value.(Item[K, V]).Expiration
 			if !expiration.IsZero() && time.Now().After(expiration) {
@@ -125,7 +132,6 @@ func (l *LRUCache[K, V]) gcRandom() {
 }
 
 // Len 返回 LRUCache 中的元素个数。
-
 func (l *LRUCache[K, V]) Len() int {
 	return len(l.data)
 }
