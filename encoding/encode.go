@@ -1,6 +1,8 @@
 package encoding
 
 import (
+	"errors"
+	"fmt"
 	"reflect"
 	"unsafe"
 )
@@ -24,12 +26,19 @@ func BytesToString(b []byte) string {
 }
 
 // StructToBytes 将结构体转换为字节数组
-func StructToBytes(data interface{}) []byte {
-	dataSize := int(reflect.TypeOf(data).Size())
-	ptr := unsafe.Pointer(reflect.ValueOf(data).Pointer())
-	return *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
-		Data: uintptr(ptr),
-		Len:  dataSize,
-		Cap:  dataSize,
-	}))
+func StructToBytes(data interface{}) ([]byte, error) {
+	if data == nil {
+		return []byte{}, nil
+	}
+	fmt.Println(reflect.TypeOf(data).Kind())
+	if reflect.TypeOf(data).Kind() != reflect.Struct {
+		return []byte{}, errors.New("input is not a struct")
+	}
+	var b []byte
+	size := unsafe.Sizeof(data)
+	byteHeader := (*reflect.SliceHeader)(unsafe.Pointer(&b))
+	byteHeader.Len = int(size)
+	byteHeader.Cap = int(size)
+	byteHeader.Data = uintptr(unsafe.Pointer(&data))
+	return b, nil
 }
