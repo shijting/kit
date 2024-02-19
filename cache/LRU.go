@@ -26,6 +26,7 @@ type LRUCache[K comparable, V any] struct {
 	gcRandomDeletionStep int
 	// 用于删除过期元素的定时器触发间隔
 	gcInterval time.Duration
+	onEvicted  func(K, V)
 }
 
 // NewLRUCache 创建一个具有指定最大容量的新 LRUCache 实例。
@@ -45,8 +46,8 @@ func NewLRUCache[K comparable, V any](cap int, opts ...option.Option[LRUCache[K,
 
 // WithGCRandomDeletionStep 设置随机删除步长。
 // step: 每次触发垃圾回收时，最多删除的元素数量, 该值不能小于1。
-func WithGCRandomDeletionStep(step int) option.Option[LRUCache[string, any]] {
-	return func(t *LRUCache[string, any]) {
+func WithGCRandomDeletionStep[K comparable, V any](step int) option.Option[LRUCache[K, V]] {
+	return func(t *LRUCache[K, V]) {
 		t.gcRandomDeletionStep = step
 	}
 }
@@ -56,6 +57,13 @@ func WithGCRandomDeletionStep(step int) option.Option[LRUCache[string, any]] {
 func WithGCInterval[K comparable, V any](interval time.Duration) option.Option[LRUCache[K, V]] {
 	return func(t *LRUCache[K, V]) {
 		t.gcInterval = interval
+	}
+}
+
+// WithOnEvicted 设置一个回调函数，当元素被删除时调用。
+func WithOnEvicted[K comparable, V any](f func(K, V)) option.Option[LRUCache[K, V]] {
+	return func(t *LRUCache[K, V]) {
+		t.onEvicted = f
 	}
 }
 
@@ -196,6 +204,9 @@ func (l *LRUCache[K, V]) removeOldest() {
 func (l *LRUCache[K, V]) removeElement(ele *list.Element) {
 	delete(l.data, ele.Value.(Item[K, V]).Key)
 	l.list.Remove(ele)
+	if l.onEvicted != nil {
+		l.onEvicted(ele.Value.(Item[K, V]).Key, ele.Value.(Item[K, V]).Value)
+	}
 }
 
 // Print 打印 LRUCache 元素值，按最近访问的顺序排列。
