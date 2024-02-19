@@ -57,14 +57,14 @@ func (i *IPTokenBucketLimiter) Build(cap, rate int64) func(handler gin.HandlerFu
 	return func(handler gin.HandlerFunc) gin.HandlerFunc {
 		return func(ctx *gin.Context) {
 			ip := ctx.ClientIP()
-
-			item, ok := i.cache.Get(ip)
+			cctx := ctx.Request.Context()
+			item, ok := i.cache.Get(cctx, ip)
 
 			var bucket *Bucket
 
 			if !ok {
 				bucket = NewBucket(cap, rate)
-				i.cache.Set(ip, bucket, 0)
+				i.cache.Set(cctx, ip, bucket, 0)
 			} else {
 				bucket = item.Value
 			}
