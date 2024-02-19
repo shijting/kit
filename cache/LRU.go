@@ -2,11 +2,17 @@ package cache
 
 import (
 	"container/list"
+	"context"
+	"errors"
 	"fmt"
 	"github.com/shijting/kit/option"
 	"math/rand"
 	"sync"
 	"time"
+)
+
+var (
+	ErrCacheNotFound = errors.New("cache not found")
 )
 
 // LRUCache 是一个基于本地内存带有固定最大容量的最近最少使用（LRU）缓存实现。
@@ -18,23 +24,38 @@ type LRUCache[K comparable, V any] struct {
 	// Maximum capacity of the LRUCache
 	MaxCapacity          int
 	gcRandomDeletionStep int
+	// 用于删除过期元素的定时器触发间隔
+	gcInterval time.Duration
 }
 
 // NewLRUCache 创建一个具有指定最大容量的新 LRUCache 实例。
+// 如果未指定任何选项，则使用默认选项。
 func NewLRUCache[K comparable, V any](cap int, opts ...option.Option[LRUCache[K, V]]) *LRUCache[K, V] {
 	cache := &LRUCache[K, V]{
 		list:                 list.New(),
 		data:                 make(map[K]*list.Element),
 		MaxCapacity:          cap,
-		gcRandomDeletionStep: 500,
+		gcRandomDeletionStep: 100,
+		gcInterval:           time.Second,
 	}
+	option.Options[LRUCache[K, V]](opts).Apply(cache)
 	go cache.startGC()
 	return cache
 }
 
+// WithGCRandomDeletionStep 设置随机删除步长。
+// step: 每次触发垃圾回收时，最多删除的元素数量, 该值不能小于1。
 func WithGCRandomDeletionStep(step int) option.Option[LRUCache[string, any]] {
 	return func(t *LRUCache[string, any]) {
 		t.gcRandomDeletionStep = step
+	}
+}
+
+// WithGCInterval 设置垃圾回收间隔。
+// 如果interval设置为0，则禁用垃圾回收。
+func WithGCInterval[K comparable, V any](interval time.Duration) option.Option[LRUCache[K, V]] {
+	return func(t *LRUCache[K, V]) {
+		t.gcInterval = interval
 	}
 }
 
@@ -47,7 +68,7 @@ type Item[K comparable, V any] struct {
 
 // Get 从 LRUCache 中检索与指定键关联的值。
 // 如果找到键，则返回值和 true，否则返回零值和 false。
-func (l *LRUCache[K, V]) Get(key K) (value Item[K, V], ok bool) {
+func (l *LRUCache[K, V]) Get(ctx context.Context, key K) (value Item[K, V], ok bool) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	var zeroVal Item[K, V]
@@ -70,7 +91,7 @@ func (l *LRUCache[K, V]) Get(key K) (value Item[K, V], ok bool) {
 
 // Set 在 LRUCache 中添加或更新与指定键关联的值。
 // 还允许为键值对设置可选的过期时间。 如果过期时间为0 表示永不过期。
-func (l *LRUCache[K, V]) Set(key K, value V, expiration time.Duration) {
+func (l *LRUCache[K, V]) Set(ctx context.Context, key K, value V, expiration time.Duration) error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	newEle := Item[K, V]{Key: key, Value: value}
@@ -88,10 +109,39 @@ func (l *LRUCache[K, V]) Set(key K, value V, expiration time.Duration) {
 	if len(l.data) > l.MaxCapacity {
 		l.removeOldest()
 	}
+	return nil
+}
+
+// Delete 从 LRUCache 中删除与指定键关联的值。
+// 如果键不存在，则返回ErrCacheNotFound错误。
+func (l *LRUCache[K, V]) Delete(ctx context.Context, key K) error {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	if ele, exists := l.data[key]; exists {
+		l.removeElement(ele)
+		return nil
+	}
+	return ErrCacheNotFound
+}
+
+// LoadAndDelete 从 LRUCache 中删除与指定键关联的值，并返回该值。
+// 如果键不存在，则返回ErrCacheNotFound错误。
+func (l *LRUCache[K, V]) LoadAndDelete(ctx context.Context, key K) (Item[K, V], error) {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	var zeroVal Item[K, V]
+	if ele, exists := l.data[key]; exists {
+		l.removeElement(ele)
+		return ele.Value.(Item[K, V]), nil
+	}
+	return zeroVal, ErrCacheNotFound
 }
 
 func (l *LRUCache[K, V]) startGC() {
-	ticker := time.NewTicker(time.Second)
+	if l.gcInterval.Milliseconds() == 0 {
+		return
+	}
+	ticker := time.NewTicker(l.gcInterval)
 	defer ticker.Stop()
 
 	for {
@@ -105,7 +155,6 @@ func (l *LRUCache[K, V]) startGC() {
 }
 
 func (l *LRUCache[K, V]) gcRandom() {
-	// 获取链表长度
 	length := l.Len()
 
 	if length == 0 {

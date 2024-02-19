@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"context"
+	"errors"
 	"github.com/go-playground/assert/v2"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -19,18 +21,22 @@ func TestLRUCache(t *testing.T) {
 			maxCapacity: 2,
 			operations: []func(*LRUCache[int, string]){
 				func(lru *LRUCache[int, string]) {
-					lru.Set(1, "one", 0)
+					ctx := context.Background()
+					lru.Set(ctx, 1, "one", 0)
 				},
 				func(lru *LRUCache[int, string]) {
-					val, ok := lru.Get(1)
+					ctx := context.Background()
+					val, ok := lru.Get(ctx, 1)
 					assert.Equal(t, ok, true)
 					assert.Equal(t, val.Value, "one")
 				},
 				func(lru *LRUCache[int, string]) {
-					lru.Set(2, "two", 0)
+					ctx := context.Background()
+					lru.Set(ctx, 2, "two", 0)
 				},
 				func(lru *LRUCache[int, string]) {
-					val, ok := lru.Get(2)
+					ctx := context.Background()
+					val, ok := lru.Get(ctx, 2)
 					assert.Equal(t, ok, true)
 					assert.Equal(t, val.Value, "two")
 
@@ -46,16 +52,20 @@ func TestLRUCache(t *testing.T) {
 			maxCapacity: 2,
 			operations: []func(*LRUCache[int, string]){
 				func(lru *LRUCache[int, string]) {
-					lru.Set(1, "one", 0)
+					ctx := context.Background()
+					lru.Set(ctx, 1, "one", 0)
 				},
 				func(lru *LRUCache[int, string]) {
-					lru.Set(2, "two", 0)
+					ctx := context.Background()
+					lru.Set(ctx, 2, "two", 0)
 				},
 				func(lru *LRUCache[int, string]) {
-					lru.Set(3, "three", 0)
+					ctx := context.Background()
+					lru.Set(ctx, 3, "three", 0)
 				},
 				func(lru *LRUCache[int, string]) {
-					_, ok := lru.Get(1)
+					ctx := context.Background()
+					_, ok := lru.Get(ctx, 1)
 
 					assert.Equal(t, ok, false)
 				},
@@ -70,21 +80,24 @@ func TestLRUCache(t *testing.T) {
 			maxCapacity: 2,
 			operations: []func(*LRUCache[int, string]){
 				func(lru *LRUCache[int, string]) {
-					lru.Set(1, "one", time.Second)
+					ctx := context.Background()
+					lru.Set(ctx, 1, "one", time.Second)
 					time.Sleep(time.Second)
-					_, ok := lru.Get(1)
+					_, ok := lru.Get(ctx, 1)
 					assert.Equal(t, ok, false)
 				},
 				func(lru *LRUCache[int, string]) {
-					lru.Set(2, "two", time.Second*2)
+					ctx := context.Background()
+					lru.Set(ctx, 2, "two", time.Second*2)
 					time.Sleep(time.Second * 2)
-					_, ok := lru.Get(2)
+					_, ok := lru.Get(ctx, 2)
 					assert.Equal(t, ok, false)
 				},
 				func(lru *LRUCache[int, string]) {
-					lru.Set(3, "three", 3*time.Second)
+					ctx := context.Background()
+					lru.Set(ctx, 3, "three", 3*time.Second)
 					time.Sleep(time.Second)
-					data, ok := lru.Get(3)
+					data, ok := lru.Get(ctx, 3)
 					assert.Equal(t, ok, true)
 					require.WithinDuration(t, data.Expiration, time.Now().Add(3*time.Second), time.Second*2)
 				},
@@ -115,4 +128,95 @@ func TestLRUCache(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSetAndGet(t *testing.T) {
+	cache := NewLRUCache[int, string](3)
+
+	cache.Set(context.Background(), 1, "one", 0)
+	cache.Set(context.Background(), 2, "two", 0)
+	cache.Set(context.Background(), 3, "three", 0)
+
+	// Test normal retrieval
+	val, ok := cache.Get(context.Background(), 1)
+	require.Equal(t, ok, true)
+	require.Equal(t, val.Value, "one")
+
+	// Test retrieving non-existent key
+	val, ok = cache.Get(context.Background(), 4)
+	require.Equal(t, ok, false)
+	require.Equal(t, val.Value, "")
+
+	// Test updating value
+	cache.Set(context.Background(), 1, "updated one", 0)
+	val, _ = cache.Get(context.Background(), 1)
+
+	assert.Equal(t, val.Value, "updated one")
+
+	// Test eviction
+	cache.Set(context.Background(), 4, "four", 0)
+	val, ok = cache.Get(context.Background(), 2)
+	require.Equal(t, ok, false)
+	require.Equal(t, val.Value, "")
+}
+
+func TestDelete(t *testing.T) {
+	cache := NewLRUCache[int, string](3)
+
+	cache.Set(context.Background(), 1, "one", 0)
+	cache.Set(context.Background(), 2, "two", 0)
+
+	// Test deleting existing key
+	err := cache.Delete(context.Background(), 1)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	_, ok := cache.Get(context.Background(), 1)
+	if ok {
+		t.Errorf("Expected key 1 to be deleted")
+	}
+
+	// Test deleting non-existent key
+	err = cache.Delete(context.Background(), 3)
+	if !errors.Is(err, ErrCacheNotFound) {
+		t.Errorf("Expected ErrCacheNotFound, got: %v", err)
+	}
+}
+
+func TestLoadAndDelete(t *testing.T) {
+	cache := NewLRUCache[int, string](3)
+
+	cache.Set(context.Background(), 1, "one", 0)
+
+	// Test loading and deleting existing key
+	val, err := cache.LoadAndDelete(context.Background(), 1)
+	require.NoError(t, err)
+	if val.Value != "one" {
+		t.Errorf("Expected value 'one', got %v", val)
+	}
+
+	_, ok := cache.Get(context.Background(), 1)
+	require.Equal(t, ok, false)
+
+	// Test loading and deleting non-existent key
+	_, err = cache.LoadAndDelete(context.Background(), 2)
+	assert.Equal(t, err, ErrCacheNotFound)
+}
+
+func TestLRUGarbageCollection(t *testing.T) {
+	cache := NewLRUCache[int, string](3, WithGCInterval[int, string](100*time.Millisecond))
+
+	cache.Set(context.Background(), 1, "one", 100*time.Millisecond)
+	cache.Set(context.Background(), 2, "two", 0)
+
+	// Wait for garbage collection
+	time.Sleep(200 * time.Millisecond)
+
+	// Test if expired items are deleted
+	_, ok := cache.Get(context.Background(), 1)
+	require.Equal(t, ok, false)
+
+	_, ok = cache.Get(context.Background(), 2)
+	require.Equal(t, ok, true)
 }
