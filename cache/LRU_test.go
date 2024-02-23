@@ -179,8 +179,8 @@ func TestDelete(t *testing.T) {
 
 	// Test deleting non-existent key
 	err = cache.Delete(context.Background(), 3)
-	if !errors.Is(err, ErrCacheNotFound) {
-		t.Errorf("Expected ErrCacheNotFound, got: %v", err)
+	if !errors.Is(err, ErrKeyNotFound) {
+		t.Errorf("Expected ErrKeyNotFound, got: %v", err)
 	}
 }
 
@@ -201,7 +201,7 @@ func TestLoadAndDelete(t *testing.T) {
 
 	// Test loading and deleting non-existent key
 	_, err = cache.LoadAndDelete(context.Background(), 2)
-	assert.Equal(t, err, ErrCacheNotFound)
+	assert.Equal(t, err, ErrKeyNotFound)
 }
 
 func TestLRUGarbageCollection(t *testing.T) {

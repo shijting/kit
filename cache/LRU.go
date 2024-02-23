@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	ErrCacheNotFound = errors.New("cache not found")
+	ErrKeyNotFound = errors.New("cache not found")
 )
 
 // LRUCache 是一个基于本地内存带有固定最大容量的最近最少使用（LRU）缓存实现。
@@ -26,7 +26,8 @@ type LRUCache[K comparable, V any] struct {
 	gcRandomDeletionStep int
 	// 用于删除过期元素的定时器触发间隔
 	gcInterval time.Duration
-	onEvicted  func(K, V)
+	// 淘汰回调
+	onEvicted func(K, V)
 }
 
 // NewLRUCache 创建一个具有指定最大容量的新 LRUCache 实例。
@@ -129,7 +130,7 @@ func (l *LRUCache[K, V]) Delete(ctx context.Context, key K) error {
 		l.removeElement(ele)
 		return nil
 	}
-	return ErrCacheNotFound
+	return ErrKeyNotFound
 }
 
 // LoadAndDelete 从 LRUCache 中删除与指定键关联的值，并返回该值。
@@ -142,7 +143,7 @@ func (l *LRUCache[K, V]) LoadAndDelete(ctx context.Context, key K) (Item[K, V], 
 		l.removeElement(ele)
 		return ele.Value.(Item[K, V]), nil
 	}
-	return zeroVal, ErrCacheNotFound
+	return zeroVal, ErrKeyNotFound
 }
 
 func (l *LRUCache[K, V]) startGC() {
