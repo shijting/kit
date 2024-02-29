@@ -2,6 +2,7 @@ package netx
 
 import (
 	"github.com/shijting/kit"
+	"github.com/shijting/kit/codex"
 	"io"
 	"net"
 	"strings"
@@ -11,7 +12,7 @@ import (
 type Server struct {
 	net.Listener
 	//manager      *Manager
-	//protocol     Protocol
+	codex codex.Codex
 	//handler      Handler
 	sendChanSize int
 }
@@ -22,7 +23,13 @@ func NewServer(listener net.Listener, sendChanSize int) *Server {
 
 func (s *Server) Serve() error {
 	for {
+		conn, err := s.accept()
 
+		if err != nil {
+			return err
+		}
+
+		_ = conn
 	}
 }
 func (s *Server) accept() (net.Conn, error) {
