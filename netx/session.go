@@ -44,6 +44,11 @@ type Session struct {
 	closeCallbacks []CloseHandler
 }
 
+// todo
+func NewSession() {
+
+}
+
 func newSession(codex codex.Codex, conn net.Conn, opts ...option.Option[Session]) *Session {
 	sess := &Session{
 		Conn:           conn,
@@ -96,11 +101,13 @@ func (s *Session) sendLoop() {
 
 func (s *Session) Send(msg any) error {
 	if s.sendCh != nil {
+
+		s.sendMu.RLock()
+		defer s.sendMu.RUnlock()
+
 		if s.IsClosed() {
 			return ErrSessionClosed
 		}
-		s.sendMu.RLock()
-		defer s.sendMu.RUnlock()
 
 		select {
 		case s.sendCh <- msg:
@@ -111,11 +118,12 @@ func (s *Session) Send(msg any) error {
 		}
 	}
 
+	s.sendMu.Lock()
+	defer s.sendMu.Unlock()
+
 	if s.IsClosed() {
 		return ErrSessionClosed
 	}
-	s.sendMu.Lock()
-	defer s.sendMu.Unlock()
 
 	err := s.codex.Send(msg)
 	if err != nil {
@@ -139,7 +147,7 @@ func (s *Session) Receive(a any) error {
 
 func (s *Session) Close() error {
 	if atomic.CompareAndSwapInt32(&s.closeFlag, 0, 1) {
-		// 执行回调函数
+		// 执行关闭回调函数
 		for _, callback := range s.closeCallbacks {
 			callback(s)
 		}
