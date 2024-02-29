@@ -86,8 +86,8 @@ func (s *Session) sendLoop() {
 		select {
 		case <-s.closeCh:
 			return
-		case msg := <-s.sendCh:
-			if err := s.codex.Send(msg); err != nil {
+		case msg, ok := <-s.sendCh:
+			if !ok || (s.codex.Send(msg)) != nil {
 				return
 			}
 		}
