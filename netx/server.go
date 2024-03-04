@@ -11,25 +11,27 @@ import (
 
 type Server struct {
 	net.Listener
-	//manager      *Manager
-	codex codex.Codex
-	//handler      Handler
+	manager      *Manager
+	codex        codex.Codex
+	handler      Handler
 	sendChanSize int
 }
 
 func NewServer(listener net.Listener, sendChanSize int) *Server {
-	return &Server{Listener: listener, sendChanSize: sendChanSize}
+	return &Server{Listener: listener, sendChanSize: sendChanSize, manager: NewManager()}
 }
 
 func (s *Server) Serve() error {
 	for {
 		conn, err := s.accept()
-
 		if err != nil {
 			return err
 		}
 
-		_ = conn
+		sess := s.manager.NewSession(conn, s.codex, s.sendChanSize)
+		go func() {
+			s.handler.HandleSession(sess)
+		}()
 	}
 }
 func (s *Server) accept() (net.Conn, error) {
@@ -45,6 +47,7 @@ func (s *Server) accept() (net.Conn, error) {
 				time.Sleep(tempDelay)
 				continue
 			}
+
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				return nil, io.EOF
 			}

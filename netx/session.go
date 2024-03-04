@@ -44,7 +44,6 @@ type Session struct {
 	closeCallbacks []CloseHandler
 }
 
-// todo
 func NewSession() {
 
 }
@@ -152,7 +151,6 @@ func (s *Session) Close() error {
 			callback(s)
 		}
 		s.closeFlag = 1
-		// TODO 从管理器中移除
 		s.Conn.Close()
 		close(s.closeCh)
 	}
