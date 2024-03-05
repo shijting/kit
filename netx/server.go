@@ -1,6 +1,7 @@
 package netx
 
 import (
+	"errors"
 	"github.com/shijting/kit"
 	"github.com/shijting/kit/codex"
 	"io"
@@ -17,8 +18,8 @@ type Server struct {
 	sendChanSize int
 }
 
-func NewServer(listener net.Listener, sendChanSize int) *Server {
-	return &Server{Listener: listener, sendChanSize: sendChanSize, manager: NewManager()}
+func NewServer(listener net.Listener, handler Handler, sendChanSize int) *Server {
+	return &Server{Listener: listener, handler: handler, sendChanSize: sendChanSize, manager: NewManager()}
 }
 
 func (s *Server) Serve() error {
@@ -39,7 +40,8 @@ func (s *Server) accept() (net.Conn, error) {
 	for {
 		conn, err := s.Listener.Accept()
 		if err != nil {
-			if ne, ok := err.(net.Error); ok && ne.Temporary() {
+			var ne net.Error
+			if errors.As(err, &ne) && ne.Temporary() {
 				tempDelay, ok := retry.Next()
 				if !ok {
 					return nil, err
