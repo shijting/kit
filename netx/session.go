@@ -44,8 +44,8 @@ type Session struct {
 	closeCallbacks []CloseHandler
 }
 
-func NewSession() {
-
+func NewSession(codex codex.Codex, conn net.Conn, opts ...option.Option[Session]) *Session {
+	return newSession(codex, conn, opts...)
 }
 
 func newSession(codex codex.Codex, conn net.Conn, opts ...option.Option[Session]) *Session {
@@ -63,7 +63,7 @@ func newSession(codex codex.Codex, conn net.Conn, opts ...option.Option[Session]
 	return sess
 }
 
-func WithSendCh(size int) option.Option[Session] {
+func WithSendSize(size int) option.Option[Session] {
 	return func(s *Session) {
 		s.sendCh = make(chan any, size)
 	}

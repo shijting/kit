@@ -18,8 +18,8 @@ type Server struct {
 	sendChanSize int
 }
 
-func NewServer(listener net.Listener, handler Handler, sendChanSize int) *Server {
-	return &Server{Listener: listener, handler: handler, sendChanSize: sendChanSize, manager: NewManager()}
+func NewServer(listener net.Listener, code codex.Codex, handler Handler, sendChanSize int) *Server {
+	return &Server{Listener: listener, codex: code, handler: handler, sendChanSize: sendChanSize, manager: NewManager()}
 }
 
 func (s *Server) Serve() error {
