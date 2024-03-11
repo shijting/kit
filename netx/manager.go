@@ -32,7 +32,7 @@ type sessionMap struct {
 func (m *Manager) NewSession(conn net.Conn, code codex.Codex, sendSize int) *Session {
 	opts := make([]option.Option[Session], 0)
 	if sendSize > 0 {
-		opts = append(opts, WithSendCh(sendSize))
+		opts = append(opts, WithSendSize(sendSize))
 	}
 	sess := newSession(code, conn, opts...)
 
