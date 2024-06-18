@@ -1,7 +1,8 @@
 package mapx
 
-// Keys 返回map中所有key
-// 注意：返回的切片中元素的顺序与map中元素的顺序不一定相同，这是因为map是无序的
+import "errors"
+
+// Keys returns all keys in the map
 func Keys[K comparable](m map[K]any) []K {
 	keys := make([]K, 0, len(m))
 	for k := range m {
@@ -10,8 +11,7 @@ func Keys[K comparable](m map[K]any) []K {
 	return keys
 }
 
-// Values 返回map中所有value
-// 注意：返回的切片中元素的顺序与map中元素的顺序不一定相同，这是因为map是无序的
+// Values returns all values in the map
 func Values[K comparable, V any](m map[K]V) []V {
 	values := make([]V, 0, len(m))
 	for _, v := range m {
@@ -20,23 +20,22 @@ func Values[K comparable, V any](m map[K]V) []V {
 	return values
 }
 
-// SlicesToMap 将两个切片转换为map，第一个切片作为键，第二个切片作为值
-func SlicesToMap[K comparable, V any](keys []K, values []V) map[K]V {
+// SlicesToMap returns a map from two slices
+func SlicesToMap[K comparable, V any](keys []K, values []V) (map[K]V, error) {
 	result := make(map[K]V)
 
-	// 确保键和值切片长度相等
 	if len(keys) != len(values) {
-		panic("键和值切片长度不一致")
+		return result, errors.New("keys and values length not equal")
 	}
 
 	for i := range keys {
 		result[keys[i]] = values[i]
 	}
 
-	return result
+	return result, nil
 }
 
-// MapToSlice 将map转换为键值切片
+// MapToSlice returns two slices from a map
 func MapToSlice[K comparable, V any](m map[K]V) ([]K, []V) {
 	keys := make([]K, 0, len(m))
 	values := make([]V, 0, len(m))
@@ -49,7 +48,7 @@ func MapToSlice[K comparable, V any](m map[K]V) ([]K, []V) {
 	return keys, values
 }
 
-// Filter 过滤map中指定的key和value，返回新的map
+// Filter returns a map containing only the key-value pairs that satisfy the filter function
 func Filter[K comparable, V any](m map[K]V, filter func(key K, value V) bool) map[K]V {
 	result := make(map[K]V, len(m))
 
@@ -62,7 +61,7 @@ func Filter[K comparable, V any](m map[K]V, filter func(key K, value V) bool) ma
 	return result
 }
 
-// MapToSliceWithOrder 将map转换为键值切片，并按照指定的顺序返回
+// MapToSliceWithOrder converts a map to key and value slices based on a comparator function
 func MapToSliceWithOrder[K comparable, V any](m map[K]V, comparator func(key K, value V) bool) ([]K, []V) {
 	keys := make([]K, 0, len(m))
 	values := make([]V, 0, len(m))
